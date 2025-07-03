@@ -1,0 +1,166 @@
+# Example GitHub Actions workflow using the Slack Notification Action
+# Copy this file to .github/workflows/ in your repository
+
+name: Slack Notifications Example
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  # Example 1: Basic notification on push
+  basic-notification:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send basic notification
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C1234567890'  # Replace with your channel ID
+          message: |
+            🚀 New push to `${{ github.repository }}`
+            
+            • Branch: `${{ github.ref_name }}`
+            • Commit: `${{ github.sha }}`
+            • Author: ${{ github.actor }}
+
+  # Example 2: Build status notification
+  build-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Your build steps here
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run tests
+        id: tests
+        run: npm test
+        continue-on-error: true
+        
+      # Send notification with build results
+      - name: Notify build results
+        if: always()
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C1234567890'  # Replace with your channel ID
+          message: |
+            ${{ steps.tests.outcome == 'success' && '✅' || '❌' }} Build ${{ steps.tests.outcome }}
+            
+            📊 **Build Summary**
+            • Repository: `${{ github.repository }}`
+            • Branch: `${{ github.ref_name }}`
+            • Commit: <${{ github.event.head_commit.url }}|${{ github.sha }}>
+            • Triggered by: ${{ github.actor }}
+            • Event: ${{ github.event_name }}
+            
+            ${{ steps.tests.outcome == 'success' && '🎉 All tests passed!' || '⚠️ Some tests failed. Please check the logs.' }}
+
+  # Example 3: PR notification with thread support
+  pr-notification:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send PR notification
+        id: pr-notification
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C1234567890'  # Replace with your channel ID
+          message: |
+            🔄 **Pull Request ${{ github.event.action }}**
+            
+            **${{ github.event.pull_request.title }}**
+            
+            • PR #${{ github.event.number }}
+            • From: `${{ github.event.pull_request.head.ref }}`
+            • To: `${{ github.event.pull_request.base.ref }}`
+            • Author: @${{ github.event.pull_request.user.login }}
+            
+            <${{ github.event.pull_request.html_url }}|View Pull Request>
+      
+      # Follow up with details in thread
+      - name: Send PR details in thread
+        if: github.event.action == 'opened'
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C1234567890'  # Replace with your channel ID
+          thread-ts: ${{ steps.pr-notification.outputs.message-ts }}
+          message: |
+            📝 **Description:**
+            ${{ github.event.pull_request.body || 'No description provided.' }}
+            
+            📊 **Stats:**
+            • Commits: ${{ github.event.pull_request.commits }}
+            • Files changed: ${{ github.event.pull_request.changed_files }}
+            • Additions: +${{ github.event.pull_request.additions }}
+            • Deletions: -${{ github.event.pull_request.deletions }}
+
+  # Example 4: Deployment notification
+  deployment-notification:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy to production
+        id: deploy
+        run: |
+          echo "Deploying to production..."
+          sleep 5  # Simulate deployment
+          echo "Deployment completed!"
+          
+      - name: Send deployment notification
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C9876543210'  # Replace with your deployment channel ID
+          message: |
+            🚀 **Production Deployment Successful!**
+            
+            📦 **Release Details:**
+            • Repository: `${{ github.repository }}`
+            • Version: `${{ github.sha }}`
+            • Deployed by: ${{ github.actor }}
+            • Time: ${{ github.event.head_commit.timestamp }}
+            
+            🔗 **Links:**
+            • <https://your-app.com|Production Site>
+            • <${{ github.event.head_commit.url }}|Commit Details>
+            
+            🎉 The latest changes are now live!
+          unfurl-links: true
+
+  # Example 5: Security alert
+  security-alert:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send security alert
+        uses: agglayer/gha-notify-generic@v1
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'C0000000000'  # Replace with your security channel ID
+          message: |
+            🚨 **Security Alert**
+            
+            ⚠️ Manual security workflow triggered
+            
+            **Details:**
+            • Repository: `${{ github.repository }}`
+            • Triggered by: ${{ github.actor }}
+            • Time: ${{ github.event.head_commit.timestamp }}
+            • Reason: Manual investigation requested
+            
+            Please review the repository for any suspicious activity. 

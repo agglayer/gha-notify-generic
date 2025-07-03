@@ -1,23 +1,47 @@
-name: The name of your action here
-description: Provide a description here
+name: Slack Notification
+description: Send rich formatted messages to any Slack channel using a Slack bot
 author: Your name or organization here
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: message-circle
+  color: green
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  slack-bot-token:
+    description:
+      'Slack Bot Token (xoxb-...) for authenticating with the Slack API'
     required: true
-    default: '1000'
+  channel-id:
+    description:
+      'Slack channel ID (e.g., C1234567890) where the message should be sent'
+    required: true
+  message:
+    description: 'Message content to send. Supports Slack markdown formatting'
+    required: true
+  thread-ts:
+    description: 'Optional timestamp of the parent message to reply in thread'
+    required: false
+  unfurl-links:
+    description:
+      'Whether to unfurl links in the message (true/false, defaults to true)'
+    required: false
+    default: 'true'
+  unfurl-media:
+    description:
+      'Whether to unfurl media in the message (true/false, defaults to true)'
+    required: false
+    default: 'true'
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  message-ts:
+    description: 'Timestamp of the sent message'
+  channel:
+    description: 'Channel where the message was sent'
+  permalink:
+    description: 'Permalink to the sent message'
 
 runs:
   using: node20
