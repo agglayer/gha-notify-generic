@@ -65,6 +65,16 @@ To find your Slack channel ID:
 3. Look at the URL - the channel ID is the string after `/archives/` (e.g.,
    `C1234567890`)
 
+#### Important: Private Channels
+
+**For private channels**, you must invite the bot to the channel first:
+
+1. In the private channel, type: `/invite @BotName` (replace with your bot's name)
+2. Or go to the channel settings → Members → Add people → search for your bot
+3. Without this step, you'll get a "channel not found" error
+
+The bot needs to be a member of private channels to send messages there, even with proper permissions.
+
 ## Usage
 
 ### Basic Usage
@@ -181,6 +191,13 @@ The action provides comprehensive error handling:
 - ❌ Network connectivity issues
 
 All errors are logged with clear messages to help with debugging.
+
+### Common Issues
+
+**"Channel not found" error:**
+- For **private channels**: Make sure the bot is invited to the channel first (`/invite @BotName`)
+- For **public channels**: Verify the channel ID is correct
+- Check that the bot has the `chat:write` and `chat:write.public` scopes
 
 ## Examples
 
